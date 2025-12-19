@@ -75,6 +75,12 @@ def ai_reply(user_message: str) -> str:
     assert AZURE_OPENAI_API_KEY is not None
     assert AZURE_OPENAI_ENDPOINT is not None
     
+    # Disable proxies to avoid httpx issues
+    os.environ['HTTP_PROXY'] = ''
+    os.environ['HTTPS_PROXY'] = ''
+    os.environ['http_proxy'] = ''
+    os.environ['https_proxy'] = ''
+    
     try:
         client = AzureOpenAI(
             api_key=AZURE_OPENAI_API_KEY,
