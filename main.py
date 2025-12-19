@@ -21,12 +21,6 @@ AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 if not AZURE_OPENAI_API_KEY or not AZURE_OPENAI_ENDPOINT:
     raise ValueError("Azure OpenAI API key and endpoint must be set")
 
-client = AzureOpenAI(
-    api_key=AZURE_OPENAI_API_KEY,
-    api_version="2024-02-01",
-    azure_endpoint=AZURE_OPENAI_ENDPOINT
-)
-
 
 @app.get("/")
 def root():
@@ -78,15 +72,27 @@ def ai_reply(user_message: str) -> str:
     if not AZURE_OPENAI_DEPLOYMENT:
         return "Error: Azure OpenAI deployment not configured"
     
-    response = client.chat.completions.create(
-        model=AZURE_OPENAI_DEPLOYMENT,
-        messages=[{"role": "user", "content": user_message}]
-    )
-    result = response.choices[0].message.content
-    if result is None:
-        result = "Sorry, I couldn't generate a response."
-    print("AI reply generated:", result)
-    return result
+    assert AZURE_OPENAI_API_KEY is not None
+    assert AZURE_OPENAI_ENDPOINT is not None
+    
+    try:
+        client = AzureOpenAI(
+            api_key=AZURE_OPENAI_API_KEY,
+            api_version="2024-08-01-preview",
+            azure_endpoint=AZURE_OPENAI_ENDPOINT
+        )
+        response = client.chat.completions.create(
+            model=AZURE_OPENAI_DEPLOYMENT,
+            messages=[{"role": "user", "content": user_message}]
+        )
+        result = response.choices[0].message.content
+        if result is None:
+            result = "Sorry, I couldn't generate a response."
+        print("AI reply generated:", result)
+        return result
+    except Exception as e:
+        print("Error generating AI reply:", e)
+        return "Sorry, there was an error generating the response."
 
 
 
