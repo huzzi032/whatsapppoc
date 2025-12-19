@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from typing import Optional
 import requests
 import os
@@ -28,12 +28,13 @@ def root():
 
 @app.get("/webhook")
 def verify_webhook(
-    hub_mode: Optional[str] = None,
-    hub_challenge: Optional[str] = None,
-    hub_verify_token: Optional[str] = None,
+    hub_mode: Optional[str] = Query(None, alias="hub.mode"),
+    hub_challenge: Optional[str] = Query(None, alias="hub.challenge"),
+    hub_verify_token: Optional[str] = Query(None, alias="hub.verify_token"),
     
 ):
     print("Webhook verification request received")
+    print(f"hub_mode: {hub_mode}, hub_verify_token: {hub_verify_token}, hub_challenge: {hub_challenge}")
     if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN and hub_challenge is not None:
         print("Webhook verified successfully")
         return int(hub_challenge)
