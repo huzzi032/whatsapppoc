@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Query
+from fastapi.responses import PlainTextResponse
 from typing import Optional
 import requests
 import os
@@ -37,9 +38,9 @@ def verify_webhook(
     print(f"hub_mode: {hub_mode}, hub_verify_token: {hub_verify_token}, hub_challenge: {hub_challenge}")
     if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN and hub_challenge is not None:
         print("Webhook verified successfully")
-        return int(hub_challenge)
+        return PlainTextResponse(content=hub_challenge)
     print("Webhook verification failed")
-    return "Verification failed"
+    return PlainTextResponse(content="Verification failed", status_code=403)
 
 
 @app.get("/health")
