@@ -5,6 +5,7 @@ import requests
 import os
 from openai import AzureOpenAI
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -51,18 +52,31 @@ def health():
 @app.post("/webhook")
 async def receive_message(request: Request):
     data = await request.json()
-    print("Message received:", data)
+    print("Webhook payload received:")
+    print(json.dumps(data, indent=2))
 
     try:
-        message = data["entry"][0]["changes"][0]["value"]["messages"][0]
-        sender = message["from"]
-        user_text = message["text"]["body"]
+        entry = data["entry"][0]
+        changes = entry["changes"][0]
+        value = changes["value"]
 
-        reply = ai_reply(user_text)
-        send_whatsapp_message(sender, reply)
+        if "messages" in value:
+            # Handle incoming message
+            message = value["messages"][0]
+            sender = message["from"]
+            user_text = message["text"]["body"]
+
+            reply = ai_reply(user_text)
+            send_whatsapp_message(sender, reply)
+        elif "statuses" in value:
+            # Handle message status update (e.g., sent, delivered, read)
+            status = value["statuses"][0]
+            print(f"Message status update: {status['status']} for message ID {status['id']}")
+        else:
+            print("Unknown webhook event type")
 
     except Exception as e:
-        print("Error:", e)
+        print("Error processing webhook:", e)
 
     return {"status": "ok"}
 
